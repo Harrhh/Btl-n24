@@ -7,6 +7,7 @@ struct SinhVien
 {
     long long mssv;
     string ten;
+    int sophong;
     SinhVien* next;
 };
 
@@ -22,26 +23,34 @@ struct Phong
 	}
     ~Phong(){
     	delete svhead;
-    	delete svtail;
-    	
+    	delete svtail; 	
 	}
 	bool findMaSV(long long mssv);
-	void addSinhVien(SinhVien* sv);
+	void addSinhVientoPhong(SinhVien* sv);
 	void printSinhVien();
 	void deleteSinhVien();
 };
-void Phong::addSinhVien(SinhVien* sv){
+void Phong::addSinhVientoPhong(SinhVien* sv){
+	SinhVien* b = new SinhVien(*sv);
+	b->next = NULL;
 	if(svhead == NULL){
-		this->svhead = this->svtail = sv;
+		this->svhead = this->svtail = b;
 	}else{
-		this->svtail->next = sv;
-		this->svtail = sv;
+		this->svtail->next = b;
+		this->svtail = b;
+		this->svtail = NULL;
+		//this->sophong = 0;
 	}
 }
 void Phong::printSinhVien(){
 	SinhVien* sv = this->svhead;
 	while(sv != NULL){
 		cout<<"-Ten sinh vien: "<<sv->ten<<"\t\t\tMSSV: "<<sv->mssv;
+		if(sv->sophong == 0){
+			cout<<"\tPhong: Chua vao";
+		}else{
+			cout<<"\tPhong: "<<sv->sophong;
+		}
 		cout<<"\n";
 		sv = sv->next;
 	}
@@ -54,16 +63,19 @@ void Phong::deleteSinhVien(){
 		while(sv != NULL){
 			SinhVien* svnext = sv->next;
 			if(sv->mssv == mssv){
+				cout<<"1";
 				svhead = svnext;
 				delete sv;
 				return;
 			}
 			if(svnext == NULL){
+					cout<<"2";
 				cout<<"\nKhong ton tai sinh vien co ma so nay trong phong.";
 				system("pause");
 				return;
 			}
 			if(svnext->mssv == mssv){
+					cout<<"3";
 				sv->next = svnext->next;
 				delete svnext;
 				return;
@@ -122,6 +134,7 @@ SinhVien* KTX::createNodeSV(long long mssv, string ten){
 	SinhVien* sv = new SinhVien();
 	sv->mssv = mssv;
 	sv->ten = ten;
+	sv->sophong = 0;
 	sv->next = NULL;
 	return sv;
 }
@@ -129,21 +142,33 @@ void KTX::addSinhVien(){
 	long long mssv;
 	string tensv;
 	cout<<"Nhap mssv: "; cin>>mssv;
-	cout<<"Nhap ten sinh vien: "; cin>>tensv;
-	SinhVien* sv = createNodeSV(mssv, tensv);
-	
-	if(this->svhead == NULL){
-		this->svhead = this->svtail = sv;
+	SinhVien* fsv = this->findMaSV(mssv);
+	if(fsv == NULL){
+		cout<<"Nhap ten sinh vien: "; cin>>tensv;
+		SinhVien* sv = createNodeSV(mssv, tensv);
+		if(this->svhead == NULL){
+			this->svhead = this->svtail = sv;
+		}else{
+			this->svtail->next = sv;
+			this->svtail = sv;
+		}
 	}else{
-		this->svtail->next = sv;
-		this->svtail = sv;
+		cout<<"\nMSSV nay da ton tai\n";
+		system("pause");
+		return;
 	}
+	
 }
 void KTX::printSinhVieninKTX(){
 	SinhVien* sv = this->svhead;
 	if(sv == NULL) cout<<"Khong co sinh vien nao.\n";
 	while(sv != NULL){
-		cout<<"-Ten sinh vien: "<<sv->ten<<"\t\t\tMSSV: "<<sv->mssv;
+		cout<<"-Ten sinh vien: "<<sv->ten<<"\t\t\tMSSV: "<<sv->mssv; 
+		if(sv->sophong == 0){
+			cout<<"\tPhong: Chua vao";
+		}else{
+			cout<<"\tPhong: "<<sv->sophong;
+		}
 		cout<<"\n";
 		sv = sv->next;
 	}
@@ -151,9 +176,9 @@ void KTX::printSinhVieninKTX(){
 }
 void KTX::deleteSinhVien(){
 	long long mssv;
-	cout<<"Nhap mssv cua sinh vien can xoa: "; cin>>mssv;
 		SinhVien* sv = this->svhead;
 		while(sv!= NULL){
+			cout<<"Nhap mssv cua sinh vien can xoa: "; cin>>mssv;
 			SinhVien* svnext = sv->next;
 			if(sv->mssv == mssv){
 				svhead = svnext;
@@ -172,6 +197,8 @@ void KTX::deleteSinhVien(){
 			}
 			sv = sv->next;
 		}
+		cout<<"Khong co sinh vien nao de xoa\n";
+		system("pause");
 }
 SinhVien* KTX::findMaSV(long long mssv){
 	SinhVien* sv = this->svhead;
@@ -254,8 +281,11 @@ void KTX::addSVtoPhong(){
 		cout<<"Nhap so phong de them: "; cin>>sophong;
 		Phong* phong = this->findPhong(sophong);
 		if(phong != NULL){
-			sv->next = NULL;
-			phong->addSinhVien(sv);
+			sv->sophong = sophong;
+			//sv->next = NULL;
+			phong->addSinhVientoPhong(sv);
+		}else{
+			cout<<"Phong khong ton tai.";
 		}
 	}else{
 		cout<<"Sinh vien co mssv nay khong ton tai.";
@@ -276,6 +306,18 @@ void KTX::deleteSVfromPhong(){
 			SinhVien* sv = phong->svhead;
 			while(sv != NULL){
 				SinhVien* svnext = sv->next;
+				if(sv->sophong == luachon){
+					phong->svhead = svnext;
+					delete sv;
+					cout<<"Xoa thanh cong.";
+					system("pause");
+					return;
+				}
+				if(svnext == NULL){
+					cout<<"Sinh vien co mssv khong co trong phong nay.";
+					system("pause");
+					return;
+				}
 				if(svnext->mssv == luachon){
 					sv->next = svnext->next;
 					delete svnext;
@@ -283,6 +325,7 @@ void KTX::deleteSVfromPhong(){
 					system("pause");
 					return;
 				}
+				sv = sv->next;
 			}
 			cout<<"\nSinh vien co mssv khong co trong phong nay.";
 		}while(luachon == -1);
